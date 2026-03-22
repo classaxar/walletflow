@@ -1,16 +1,29 @@
-# React + Vite
+# WalletFlow 💸
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+WalletFlow is a modern, privacy-first personal finance tracker built directly in React. It uses a unique **Envelope Budgeting** system to automatically separate physical cash/bank balances from virtual savings goals.
 
-Currently, two official plugins are available:
+## Core Difference
+Normally, expense trackers just track money in and money out. **WalletFlow** separates physical locations from conceptual bounds.
+For example, if you withdraw 500 Cash from the Bank for pocket money, WalletFlow automatically drops your Bank balance by 500, raises your physical Cash balance by 500, and immediately deducts 500 from your virtual "Heart" Pocket Money bucket. 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
+- **Instant Local Setup**: All data is securely stored purely in the browser's `localStorage`. No sign-up required.
+- **Envelope Math Engine**: Automatically deducts from physical and virtual wallets intelligently based on the mode of payment (Cash vs. Online).
+- **Premium Dark Mode Glassmorphism**: A stunning built-from-scratch UI using Contextual styling.
+- **Roll-Over Logic**: Leftover allocation cash instantly rolls into the next month's bucket as a savings reward.
 
-## React Compiler
+## Tech Stack
+- React + Vite
+- Context API (State Management)
+- Vanilla CSS Variables (No external libraries!)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Running Locally
 
-## Expanding the ESLint configuration
+Clone the project and run the server:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm install
+npm run dev
+```
+
+The application will run on `http://localhost:5173`.
