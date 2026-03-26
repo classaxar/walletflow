@@ -9,83 +9,87 @@ const TransactionForm = () => {
     mode: 'Online',
     amount: '',
     wallet: 'Needs',
-    category: 'Food',
+    category: 'Eating',
     description: ''
   });
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.amount) return;
     addTransaction(formData);
-    // Reset amount and description after submit
     setFormData({ ...formData, amount: '', description: '' });
   };
 
-  const inputStyle = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid var(--panel-border)',
-    color: '#fff',
-    padding: '10px',
-    borderRadius: '4px',
-    width: '100%',
-    fontFamily: 'inherit'
-  };
-
   return (
-    <div className="glass-panel" style={{ marginBottom: '24px' }}>
-      <h3 style={{ marginBottom: '16px' }}>Quick Add Transaction</h3>
-      <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+    <section className="premium-card" style={{ position: 'relative' }}>
+      <h3 className="section-title" style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', marginBottom: '24px' }}>
+        Log New Transaction
+      </h3>
+      <form onSubmit={handleSubmit} className="add-form">
         
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Type</label>
-          <select name="type" value={formData.type} onChange={handleChange} style={inputStyle}>
-            <option style={{color:'#000'}} value="Expense">Expense</option>
-            <option style={{color:'#000'}} value="Income">Income</option>
-            <option style={{color:'#000'}} value="Transfer">Transfer to Cash</option>
-            <option style={{color:'#000'}} value="Allocation">Virtual Allocation (To Heart)</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Amount (₹)</label>
-          <input type="number" name="amount" required value={formData.amount} onChange={handleChange} style={inputStyle} placeholder="e.g. 500" />
-        </div>
-
-        {formData.type !== 'Allocation' && (
+        {/* Row 1: Type & Amount */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Payment Mode</label>
-            <select name="mode" value={formData.mode} onChange={handleChange} style={inputStyle}>
-              <option style={{color:'#000'}} value="Online">Online / Bank</option>
-              <option style={{color:'#000'}} value="Cash">Cash</option>
+            <label className="form-label">Type</label>
+            <select name="type" value={formData.type} onChange={handleChange} className="premium-input" style={{ padding: '14px', cursor: 'pointer' }}>
+              <option className="theme-option" value="Expense">Expense</option>
+              <option className="theme-option" value="Income">Income</option>
+              <option className="theme-option" value="Transfer">Transfer to Cash</option>
+              <option className="theme-option" value="Allocation">Virtual Allocation (To Heart)</option>
             </select>
+          </div>
+          <div>
+            <label className="form-label">Amount (₹)</label>
+            <input type="number" name="amount" required value={formData.amount} onChange={handleChange} className="premium-input" placeholder="0.00" style={{ padding: '14px', fontSize: '1.1rem', fontWeight: '600' }} />
+          </div>
+        </div>
+
+        {/* Row 2: Category, Mode, Wallet */}
+        {formData.type !== 'Allocation' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label className="form-label">Category</label>
+              <select name="category" value={formData.category} onChange={handleChange} className="premium-input" style={{ padding: '14px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                <option className="theme-option" value="Eating">Eating / Food</option>
+                <option className="theme-option" value="Transportation">Transportation</option>
+                <option className="theme-option" value="College">College Stuff</option>
+                <option className="theme-option" value="Music">Music / Subs</option>
+                <option className="theme-option" value="SIP">SIP / Invest</option>
+                <option className="theme-option" value="Family">Family / Needs</option>
+                <option className="theme-option" value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Payment Mode</label>
+              <select name="mode" value={formData.mode} onChange={handleChange} className="premium-input" style={{ padding: '14px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                <option className="theme-option" value="Online">Online / Bank</option>
+                <option className="theme-option" value="Cash">Cash</option>
+              </select>
+            </div>
+            <div>
+              <label className="form-label">Deduct From</label>
+              <select name="wallet" value={formData.wallet} onChange={handleChange} className="premium-input" style={{ padding: '14px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                <option className="theme-option" value="Needs">Needs</option>
+                <option className="theme-option" value="Heart">Heart</option>
+                <option className="theme-option" value="SIP">SIP</option>
+              </select>
+            </div>
           </div>
         )}
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Virtual Wallet</label>
-          <select name="wallet" value={formData.wallet} onChange={handleChange} style={inputStyle}>
-            <option style={{color:'#000'}} value="Needs">Needs / Family</option>
-            <option style={{color:'#000'}} value="Heart">Heart (Pocket Money)</option>
-            <option style={{color:'#000'}} value="SIP">SIP Investment</option>
-          </select>
+        {/* Row 3: Description & Submit */}
+        <div className="form-input-group" style={{ marginBottom: '24px' }}>
+          <label className="form-label">Notes</label>
+          <input type="text" name="description" value={formData.description} onChange={handleChange} className="premium-input" placeholder="Optional notes for this transaction..." style={{ padding: '14px' }} />
         </div>
 
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Description</label>
-          <input type="text" name="description" value={formData.description} onChange={handleChange} style={inputStyle} placeholder="e.g. Samosa or Petrol" />
-        </div>
-
-        <div style={{ gridColumn: '1 / -1', marginTop: '8px' }}>
-          <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Add Record</button>
-        </div>
-
+        <button type="submit" className="premium-btn">
+          Post Record
+        </button>
       </form>
-    </div>
+    </section>
   );
 };
-
 export default TransactionForm;
