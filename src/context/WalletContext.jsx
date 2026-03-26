@@ -1,31 +1,46 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const WalletContext = createContext();
 
 export const useWallet = () => useContext(WalletContext);
 
+// Temporary User ID to prevent global data mixing until Authentication is fully added
+const TEMP_USER_ID = "walletflow_admin";
+
 export const WalletProvider = ({ children }) => {
-  // Try to load from local storage or use defaults
-  const [data, setData] = useState(() => {
-    const saved = localStorage.getItem('walletflow_data');
-    if (saved) return JSON.parse(saved);
-    return {
-      transactions: [],
-      // Base configurations
-      allocations: {
-        income: 40000,
-        sip: 20000,
-        heart: 5000,
-      }
-    };
-  });
+  const [data, setData] = useState({ transactions: [], allocations: { income: 40000, sip: 20000, heart: 5000 } });
+  const [loading, setLoading] = useState(true);
 
-  // Save to local storage whenever data changes
+  // Set up Live Cloud Sync to replace standard LocalStorage
   useEffect(() => {
-    localStorage.setItem('walletflow_data', JSON.stringify(data));
-  }, [data]);
+    const q = query(
+      collection(db, "transactions"),
+      where("userId", "==", TEMP_USER_ID)
+    );
 
-  // Derived Balances Calculation
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fbTransactions = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Sort in-memory instead of Firestore orderBy to prevent requiring remote composite index setups
+      fbTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      setData(prev => ({ ...prev, transactions: fbTransactions }));
+      setLoading(false);
+    }, (err) => {
+      console.error("Firestore sync error:", err);
+      // Fallback so application doesn't completely crash if database goes down
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Complex Math Logic mapped precisely onto the live Cloud array
   const getBalances = () => {
     let bank = 0;
     let cash = 0;
@@ -36,37 +51,29 @@ export const WalletProvider = ({ children }) => {
       const amt = parseFloat(t.amount);
       
       if (t.type === 'Income') {
-        // Income strictly goes to Bank and fills Needs envelope
         bank += amt;
         needs += amt;
       } 
       else if (t.type === 'Expense') {
-        // Expense reduces physical mode and virtual wallet
         if (t.mode === 'Cash') {
           cash -= amt;
-          // CASH RULE: If you spend cash, it does NOT reduce Heart or Needs again,
-          // because it was already deducted from the envelope when you withdrew it (Transfer).
         }
         else if (t.mode === 'Online') {
           bank -= amt;
           if (t.wallet === 'Heart') heart -= amt;
           if (t.wallet === 'Needs') needs -= amt;
-          if (t.wallet === 'SIP') {
-             needs -= amt; // taking it from the general needs pool
-          }
+          if (t.wallet === 'SIP') { needs -= amt; }
         }
       }
       else if (t.type === 'Transfer' && t.wallet === 'Heart') {
-        // Transfer cash from Bank ATM for pocket money (Heart)
         bank -= amt;
         cash += amt;
-        heart -= amt; // Using pocket money allocation
+        heart -= amt;
       }
       else if (t.type === 'Allocation') {
-        // Internal movement purely for envelopes when a new month starts/income happens
         if (t.wallet === 'Heart') {
-           needs -= amt; // Take from needs pool
-           heart += amt; // Give to heart bucket
+           needs -= amt; 
+           heart += amt; 
         }
       }
     });
@@ -74,12 +81,30 @@ export const WalletProvider = ({ children }) => {
     return { bank, cash, heart, needs };
   };
 
-  const addTransaction = (transaction) => {
-    setData(prev => ({
-      ...prev,
-      transactions: [{ ...transaction, id: Date.now() }, ...prev.transactions]
-    }));
+  const addTransaction = async (transaction) => {
+    // Instead of pushing to local memory, construct the package and push straight to Cloud Firestore
+    try {
+      await addDoc(collection(db, "transactions"), {
+        ...transaction,
+        amount: parseFloat(transaction.amount),
+        userId: TEMP_USER_ID,
+        createdAt: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error("Error adding doc:", e);
+      alert("Failed to sync transaction. Check connection or Database rules.");
+    }
   };
+
+  if (loading) {
+    return (
+      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a', color: 'var(--text-secondary)' }}>
+        <h2 style={{ fontFamily: 'var(--font-display)', animation: 'pulse 1.5s infinite', fontSize: '1.2rem', letterSpacing: '1px' }}>
+          Syncing with Private Cloud...
+        </h2>
+      </div>
+    );
+  }
 
   return (
     <WalletContext.Provider value={{ data, addTransaction, balances: getBalances() }}>
